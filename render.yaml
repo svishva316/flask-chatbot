@@ -1,10 +1,7 @@
 services:
   - type: web
-    name: flask-chatbot
+    name: flask-chatbot-1
     env: python
-    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
-    envVars:
-      - key: STRIPE_SECRET_KEY
-        sync: false
+
