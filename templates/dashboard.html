@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Dashboard</h2>
+<p>Welcome, {{ user.email }}</p>
+
+{% if not user.is_paid %}
+  <p><strong>You don't have access yet.</strong></p>
+  <button id="checkoutBtn">Buy Chatbot Pro ($5)</button>
+{% else %}
+  <p style="color:green;">You have access. Start chatting below.</p>
+{% endif %}
+
+<hr>
+<div class="chatbox" id="chatbox">
+  {% for msg in user_messages %}
+    <div><b>{{ 'You' if msg.sender=='user' else 'Bot' }}:</b> {{ msg.content }}</div>
+  {% endfor %}
+</div>
+
+<div class="chatbox" id="chatbox"></div>
+<input type="text" id="msg" style="width:70%;" placeholder="Type your message..." />
+<button id="sendBtn">Send</button>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+const publishableKey = "{{ config.get('STRIPE_PUBLISHABLE_KEY') or '' }}";
+const stripe = Stripe("{{ publishable_key }}");
+
+document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
+  const res = await fetch("/create-checkout-session", { method: "POST" });
+  const data = await res.json();
+  if (data.url) {
+    window.location = data.url;
+  } else {
+    alert("Error creating checkout session");
+  }
+});
+
+document.getElementById('sendBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('msg').value.trim();
+  if (!msg) return;
+  appendMessage('You', msg, 'blue');
+
+  const res = await fetch("/chat", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({message: msg})
+  });
+  const data = await res.json();
+  if (data.response) {
+    appendMessage('Bot', data.response, 'green');
+  } else if (data.error) {
+    appendMessage('Bot', "Error: " + data.error, 'red');
+  }
+  document.getElementById('msg').value = "";
+});
+
+function appendMessage(who, text, color='black'){
+  const box = document.getElementById('chatbox');
+  const div = document.createElement('div');
+  div.innerHTML = `<b style="color:${color}">${who}:</b> ${text}`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+</script>
+{% endblock %}

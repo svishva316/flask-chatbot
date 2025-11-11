@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Welcome to Chatbot Business Assistant</h1>
+{% if not current_user.is_authenticated %}
+<p><a href="{{ url_for('login') }}">Login</a> to chat or <a href="{{ url_for('register') }}">Create account</a>.</p>
+{% else %}
+<p>Go to <a href="{{ url_for('dashboard') }}">Dashboard</a>.</p>
+{% endif %}
+{% endblock %}
