@@ -37,7 +37,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///chatbot.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-os.environ["OPENAI_API_KEY"] = "OPENAI_API_KEY"
+os.environ["OPENAI_API_KEY"]
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 db.init_app(app)
 with app.app_context():
