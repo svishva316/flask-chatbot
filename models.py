@@ -1,6 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
+
+
 
 db = SQLAlchemy()
 
@@ -20,6 +23,18 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    sender = db.Column(db.String(10))  # 'user' or 'bot'
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    sender = db.Column(db.String(10))  # "user" or "bot"
     content = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ChatHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer)
+    message = db.Column(db.String(300))
+    sender = db.Column(db.String(10))  # "user" or "bot"
+    
+def save_message(user_id, text, sender):
+    msg = ChatHistory(user_id=user_id, message=text, sender=sender)
+    db.session.add(msg)
+    db.session.commit()
