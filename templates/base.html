@@ -1,31 +1,115 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Chatbot SaaS</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title if title else "Chatbot SaaS" }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body{font-family: Arial, sans-serif; margin:30px;}
-    .chatbox{width:80%;height:350px;border:1px solid #ccc;padding:10px;overflow-y:scroll}
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 40px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #ffeb3b;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      margin-top: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    button {
+      background: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #e68900;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      outline: none;
+      font-size: 1em;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
   </style>
 </head>
 <body>
+
   <nav>
-    {% if current_user.is_authenticated %}
-      <a href="{{ url_for('dashboard') }}">Dashboard</a> |
-      <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">Login</a> |
-      <a href="{{ url_for('register') }}">Register</a>
-    {% endif %}
+    <div><a href="{{ url_for('index') }}"><strong>🤖 Chatbot SaaS</strong></a></div>
+    <div>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Login</a>
+        <a href="{{ url_for('register') }}">Register</a>
+      {% endif %}
+    </div>
   </nav>
-  <hr>
-  {% with messages = get_flashed_messages() %}
-    {% if messages %}
-      <ul>
-        {% for m in messages %}<li style="color:red;">{{m}}</li>{% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-  {% block content %}{% endblock %}
+
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>
+    © {{ current_year if current_year else "2025" }} Chatbot SaaS — All Rights Reserved
+  </footer>
 </body>
 </html>
