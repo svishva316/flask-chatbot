@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* TOOL BAR */
+.tool-bar {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+.tool-btn {
+    padding: 8px 18px;
+    background: #4A56E2;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+}
+.tool-btn:hover {
+    opacity: 0.8;
+}
+</style>
+
+<div style="max-width: 700px; margin: 0 auto; padding: 20px;">
+
+    <h2 style="text-align:center;">AI Chat Assistant</h2>
+
+    <!-- 🔥 TOOL BUTTONS -->
+    <div class="tool-bar">
+        <button class="tool-btn" onclick="startRecording()">🎙 Voice Input</button>
+        <button class="tool-btn" onclick="speakLastMessage()">🔊 Text-to-Speech</button>
+        <button class="tool-btn" onclick="generateImage()">🖼 Generate Image</button>
+        <button class="tool-btn" onclick="document.getElementById('fileUpload').click()">📄 Upload File</button>
+        <input type="file" id="fileUpload" style="display:none" onchange="sendFile(this)">
+    </div>
+
+    <!-- Chat Display -->
+    <div id="chat-box" style="
+        height: 400px;
+        border: 1px solid #ccc;
+        padding: 15px;
+        overflow-y: scroll;
+        border-radius: 10px;
+        background: #f9f9f9;
+        margin-bottom: 20px;">
+    </div>
+
+    <!-- Chat Input -->
+    <form id="chat-form">
+        <textarea id="user-input" class="form-control" placeholder="Type your message..." required
+            style="height: 80px;"></textarea>
+        <button class="btn btn-primary mt-3" type="submit" style="width:100%;">Send</button>
+    </form>
+</div>
+
+<script>
+let lastBotMessage = "";
+const box = document.getElementById("chat-box");
+
+/* Load chat history on page load */
+window.onload = async () => {
+    const history = await fetch("/history");
+    const data = await history.json();
+    data.forEach(m => {
+        box.innerHTML += `<p><b>${m.sender}:</b> ${m.content}</p>`;
+    });
+    box.scrollTop = box.scrollHeight;
+};
+
+/* Send chat */
+document.getElementById("chat-form").addEventListener("submit", async function(e){
+    e.preventDefault();
+
+    let msg = document.getElementById("user-input").value;
+
+    box.innerHTML += `<p><b>You:</b> ${msg}</p>`;
+    document.getElementById("user-input").value = "";
+    box.scrollTop = box.scrollHeight;
+
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: msg })
+    });
+
+    const data = await response.json();
+    lastBotMessage = data.reply;
+
+    box.innerHTML += `<p><b>AI:</b> ${data.reply}</p>`;
+    box.scrollTop = box.scrollHeight;
+});
+
+/* 🔥 TTS */
+function speakLastMessage() {
+    if (!lastBotMessage) return alert("No message to speak.");
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(lastBotMessage));
+}
+
+/* 🔥 Image Generation */
+async function generateImage() {
+    let prompt = prompt("Enter an image description:");
+    if (!prompt) return;
+
+    const response = await fetch("/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt })
+    });
+
+    const data = await response.json();
+
+    box.innerHTML += `<p><b>AI (Image):</b><br><img src="${data.url}" width="300"/></p>`;
+    box.scrollTop = box.scrollHeight;
+}
+
+/* 🔥 File Upload */
+async function sendFile(input) {
+    let file = input.files[0];
+    let form = new FormData();
+    form.append("file", file);
+
+    const response = await fetch("/upload-file", { method: "POST", body: form });
+    const data = await response.json();
+
+    box.innerHTML += `<p><b>AI (File Read):</b> ${data.text}</p>`;
+}
+
+/* 🔥 Speech-to-Text */
+function startRecording() {
+    let rec = new webkitSpeechRecognition();
+    rec.lang = "en-US";
+    rec.onresult = function(e) {
+        document.getElementById("user-input").value = e.results[0][0].transcript;
+    };
+    rec.start();
+}
+function speak(text) {
+    if (!window.speechSynthesis) {
+        console.log("Speech synthesis not supported");
+        return;
+    }
+
+    const msg = new SpeechSynthesisUtterance(text);
+    msg.rate = 1;        // speed (1 is default)
+    msg.pitch = 1;       // tone
+    msg.volume = 1;      // volume
+    msg.lang = "en-US";  // voice language
+
+    window.speechSynthesis.speak(msg);
+}
+
+</script>
+
+{% endblock %}
