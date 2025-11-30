@@ -1,10 +1,41 @@
 Flask==2.3.3
 Flask-Login==0.6.3
 Flask-SQLAlchemy==3.0.3
-requests==2.31.0
+Flask-Migrate==4.0.5
+Flask-SocketIO==5.3.6
+
 Werkzeug==2.3.7
-python-dotenv==1.0.0
-stripe
 gunicorn
+
+# Environment
+python-dotenv==1.0.0
+
+# HTTP
+requests==2.31.0
+
+# Authentication / Payments
+stripe==7.0.0
+
+# OpenAI + GPT + Audio
 openai
-flask-migrate
+gTTS
+
+# Websocket for Replicate
+websocket-client==1.7.0
+
+# Image processing
+Pillow
+pytesseract
+
+# PDF + DOCX
+PyPDF2
+python-docx
+reportlab
+
+# Torch / Audio STT
+torch==2.1.0+cpu
+torchaudio==2.1.0+cpu
+
+# Utilities
+uuid
+json5
