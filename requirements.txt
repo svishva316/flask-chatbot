@@ -7,3 +7,4 @@ python-dotenv==1.0.0
 stripe
 gunicorn
 openai
+flask-migrate
