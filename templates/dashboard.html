@@ -1,66 +1,2601 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>Dashboard</h2>
-<p>Welcome, {{ user.email }}</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard - Chatbot SaaS (Futuristic Neon)</title>
 
-{% if not user.is_paid %}
-  <p><strong>You don't have access yet.</strong></p>
-  <button id="checkoutBtn">Buy Chatbot Pro ($5)</button>
-{% else %}
-  <p style="color:green;">You have access. Start chatting below.</p>
-{% endif %}
+<!-- FUTURISTIC NEON THEME (UI ONLY — NO LOGIC MODIFIED) -->
+<style>
+.msg.bot {
+  background: #242424;
+  border: 1px solid #333;
+  color: white;
+  font-size: 15px;
+  line-height: 1.55;
+}
 
-<hr>
-<div class="chatbox" id="chatbox">
-  {% for msg in user_messages %}
-    <div><b>{{ 'You' if msg.sender=='user' else 'Bot' }}:</b> {{ msg.content }}</div>
-  {% endfor %}
+.msg.user {
+  background: #0b93f6;
+  color: white;
+}
+
+.typing {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+
+
+/* --- LEFT SLIDE BAR + NEON STYLE --- */
+#leftSidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 60px;
+  height: 100vh;
+  background: linear-gradient(180deg, rgba(0,0,20,0.7), rgba(0,0,0,0.6));
+  border-right: 1px solid rgba(255,255,255,0.08);
+  padding-top: 15px;
+  overflow: hidden;
+  transition: 0.25s;
+  z-index: 9999;
+}
+#leftSidebar:hover {
+  width: 240px;
+}
+
+/* Logo */
+.sideLogo {
+  width: 40px;
+  height: 40px;
+  margin: 6px auto 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #00eaff, #8a2be2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #000;
+  box-shadow: 0 0 18px #8a2be2aa;
+}
+
+/* Menu Items */
+.sideItem {
+  padding: 12px;
+  margin: 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 18px;
+  white-space: nowrap;
+  color: #e8f7ff;
+  transition: 0.2s;
+  position: relative;
+}
+.sideItem:hover {
+  background: rgba(138,43,226,0.3);
+}
+
+/* Glow line */
+.sideItem::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 0px;
+  background: linear-gradient(#00eaff, #ff3af3);
+  border-radius: 2px;
+  transition: height .2s;
+}
+.sideItem:hover::before {
+  height: 26px;
+}
+
+/* Labels appear on hover */
+#leftSidebar span {
+  opacity: 0;
+  transition: 0.25s;
+}
+#leftSidebar:hover span {
+  opacity: 1;
+}
+
+/* Space for page when sidebar is open */
+body {
+  margin-left: 60px !important;
+}
+#leftSidebar:hover ~ * {
+  margin-left: 240px !important;
+}
+
+/* History blocks inside sidebar */
+.leftHistory {
+  padding: 10px;
+  margin-top: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.leftHistory .histBlock {
+  padding: 10px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: 0.2s;
+}
+.leftHistory .histBlock:hover {
+  background: rgba(138,43,226,0.3);
+  transform: translateY(-3px);
+}
+.leftHistory .histTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+.leftHistory .histTime {
+  font-size: 11px;
+  color: #bbb;
+}
+
+
+
+
+
+/* ===========================
+   FULL FUTURISTIC NEON UI
+   — UI / CSS ONLY. No JS or logic modified.
+   Injected animations, neon glow, holographic glass.
+=========================== */
+
+:root{
+  --bg-dark-1: #070219;
+  --bg-dark-2: #030317;
+  --glass: rgba(255,255,255,0.04);
+
+  --neon-a: #00eaff;
+  --neon-b: #8a2be2;
+  --neon-c: #ff3af3;
+  --neon-g: #39ff14;
+  --muted: rgba(255,255,255,0.66);
+  --card-glow: rgba(0,234,255,0.06);
+}
+
+html,body{
+  height:100%;
+  margin:0;
+  font-family:Inter,Segoe UI,Roboto,Arial,system-ui,-apple-system;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  background: radial-gradient(circle at 10% 10%, #07102a 0%, var(--bg-dark-1) 30%, var(--bg-dark-2) 100%);
+  color: #e8f7ff;
+  overflow-y: auto;
+}
+
+/* Subtle animated aurora overlay */
+body::after{
+  content: "";
+  position: fixed;
+  inset: -40%;
+  background: conic-gradient(from 120deg at 50% 50%, rgba(138,43,226,0.06), rgba(0,234,255,0.05), rgba(255,58,243,0.04));
+  filter: blur(120px) saturate(110%);
+  opacity: 0.18;
+  z-index: -2;
+  animation: aurora 16s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  0% { transform: translateY(0) scale(1); opacity: 0.14; }
+  100% { transform: translateY(20px) scale(1.08); opacity: 0.20; }
+}
+
+/* Tron grid (subtle) */
+body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(0,234,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(138,43,226,0.04) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mix-blend-mode: overlay;
+  z-index: -1;
+  animation: gridmove 22s linear infinite;
+  opacity: 0.8;
+  pointer-events: none;
+}
+@keyframes gridmove {
+  0% { background-position: 0 0, 0 0; }
+  100% { background-position: 0 46px, 46px 0; }
+}
+
+/* Layout container */
+.page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 28px auto;
+  padding: 0 18px;
+}
+
+/* Top controls floating */
+.top-controls {
+  position: fixed;
+  right: 20px;
+  top: 18px;
+  display: flex;
+  gap: 10px;
+  z-index: 60;
+}
+.circle-btn {
+  width:48px; height:48px; border-radius:50%;
+  border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  box-shadow: 0 6px 22px rgba(0,0,0,0.35), 0 0 18px rgba(0,234,255,0.06) inset;
+  color: #e9fbff;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.circle-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(0,0,0,0.45), 0 0 26px rgba(0,234,255,0.18); }
+
+.toggle-btn {
+  padding:8px 12px; border-radius:10px; border:none; cursor:pointer;
+  background: linear-gradient(90deg,var(--neon-a),var(--neon-b));
+  color:#001018; font-weight:700;
+  box-shadow: 0 6px 24px rgba(0,234,255,0.08);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.toggle-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 34px rgba(138,43,226,0.12); }
+
+/* Card base */
+.card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+  backdrop-filter: blur(10px) saturate(110%);
+  border: 1px solid rgba(255,255,255,0.03);
+  overflow: visible;
+}
+
+/* Typography header */
+header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  background: linear-gradient(90deg, var(--neon-a), var(--neon-c));
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 6px 28px rgba(138,43,226,0.06);
+}
+header p { margin:6px 0 0; color: var(--muted); font-size: 13px; }
+
+/* Toolbar */
+.toolbar {
+  display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;
+}
+.tool {
+  background: linear-gradient(90deg,var(--neon-a),var(--neon-b));
+  color:#001118;
+  border:none; padding:10px 12px; border-radius:12px; cursor:pointer;
+  font-weight:700;
+  box-shadow: 0 8px 28px rgba(0,234,255,0.06);
+  transition: transform .16s ease, box-shadow .16s ease;
+}
+.tool.secondary{
+  background: rgba(255,255,255,0.03);
+  color: #e8f7ff;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.tool:hover{ transform: translateY(-3px); box-shadow: 0 14px 36px rgba(138,43,226,0.10); }
+
+/* Layout: Chat + Right panel */
+.chat-area { display:flex; gap:14px; margin-top:8px; }
+.chat-panel { flex:1; min-height:420px; background: rgba(0,0,0,0.12); border-radius:12px; padding:14px; display:flex; flex-direction:column; border: 1px solid rgba(255,255,255,0.02); }
+.messages { flex:1; overflow:auto; padding:8px; border-radius:8px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.006)); }
+
+/* Chat bubbles */
+.msg { margin:8px 0; max-width:85%; padding:10px 12px; border-radius:12px; word-break:break-word; box-shadow:0 6px 12px rgba(0,0,0,0.18); transition: transform .12s ease; }
+.msg.user {
+  margin-left: auto;
+  background: #0b93f6;
+  color: white;
+  padding: 14px 16px;
+  border-radius: 14px;
+  max-width: 90%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.msg.bot {
+  margin-right: auto;
+  background: #ffffff;
+  color: #1a1a1a;
+  text-align: left;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 14px 16px;
+  max-width: 90%;
+  font-size: 16px;
+  line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.msg:hover { transform: translateY(-4px) scale(1.01); }
+
+/* Input row */
+.input-row { display:flex; gap:8px; margin-top:12px; }
+.text-input { flex:1; padding:12px 14px; border-radius:10px; border:none; outline:none; background: rgba(255,255,255,0.06); color:#e8f7ff; font-size:15px; }
+.send-btn { background: linear-gradient(90deg,var(--neon-c),var(--neon-b)); color:#001018; font-weight:800; border:none; padding:12px 18px; border-radius:12px; cursor:pointer; box-shadow: 0 12px 34px rgba(138,43,226,0.08); transition: transform .16s ease; }
+.send-btn:hover { transform: translateY(-3px) scale(1.02); }
+
+/* Right panel */
+.right-panel { width:280px; display:flex; flex-direction:column; gap:12px; }
+.panel-card { background: rgba(255,255,255,0.02); padding:12px; border-radius:12px; border: 1px solid rgba(255,255,255,0.04); }
+
+/* TTS controls & selects */
+.select, .input { padding:8px 12px; border-radius:8px; border:none; outline:none; background: rgba(255,255,255,0.03); color: #e8f7ff; }
+
+/* Modal */
+.modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:120; }
+.modal { width: 90%; max-width: 1200px; max-height: 90vh; overflow-y: auto; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008)); border-radius: 14px; padding: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(10px); color: #fff; display: flex; flex-direction: column; }
+
+/* AI Preview */
+.preview { width:100%; border-radius:12px; box-shadow: 0 12px 36px rgba(0,234,255,0.06); }
+
+/* Inputs styling */
+input[type="file"] { display: none; }
+.prompt-input, .style-select { width:100%; padding:10px; border-radius:10px; background: rgba(255,255,255,0.03); color:#e8f7ff; border: 1px solid rgba(255,255,255,0.03); }
+
+/* Scrollbar neon glow */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg,#00eaff,#8a2be2);
+  border-radius:10px;
+  box-shadow: 0 0 10px rgba(0,234,255,0.12);
+}
+
+/* Responsive */
+@media (max-width: 880px){
+  .chat-area { flex-direction: column; }
+  .right-panel { width:100%; }
+  .top-controls { right: 10px; top: 10px; }
+}
+
+/* small button animation accent */
+@keyframes neonPulse {
+  0% { box-shadow: 0 6px 20px rgba(0,234,255,0.06); transform: translateY(0); }
+  50% { box-shadow: 0 12px 36px rgba(138,43,226,0.10); transform: translateY(-2px); }
+  100% { box-shadow: 0 6px 20px rgba(0,234,255,0.06); transform: translateY(0); }
+}
+.tool { animation: neonPulse 6s ease-in-out infinite; }
+
+
+/* === History Actions (Option B layout) === */
+.histActions {
+  margin-top: 6px;
+  display: flex;
+  gap: 12px;
+}
+
+.histActions button {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #e8f7ff;
+  transition: 0.2s;
+}
+
+.histActions button:hover {
+  background: linear-gradient(90deg, #00eaff55, #ff3af355);
+  border-color: #00eaff;
+  transform: translateY(-2px);
+}
+
+/* Hidden history panel inside sidebar */
+#leftHistoryPanel {
+  display: none;
+  flex-direction: column;
+  padding: 10px;
+}
+
+#leftSidebar:hover #leftHistoryPanel {
+  /* Allow expand when sidebar expands */
+}
+
+#leftHistoryPanel {
+  margin-top: 10px;
+  padding: 10px;
+  display: none;
+}
+
+/* --- Logout + Shield Animations --- */
+@keyframes popIn {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes lockPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes shieldShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-3px); }
+  100% { transform: translateX(0); }
+}
+
+.toolCategory {
+    margin-top: 12px;
+    font-weight: bold;
+    font-size: 11px;
+    color: #8a2be2;
+    text-transform: uppercase;
+}
+
+.toolItem {
+    background: none;
+    border: none;
+    color: white;
+    text-align: left;
+    padding: 6px 10px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.toolItem:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+
+
+.msg pre {
+  background: #f3f4f6 !important;
+  color: #111 !important;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  overflow-x: auto;
+  font-size: 14px;
+}
+
+.msg code {
+  background: #f3f4f6 !important;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+
+
+
+
+/* TOOL MODAL STYLES */
+/* Hidden by default; JS shows it with display = "flex" */
+#toolModalOverlay { display: none; pointer-events:none;}
+#toolModalOverlay.active { display: flex;pointer-events:auto; }
+
+#toolModal .toolInput { width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.02); color:#e8f7ff; }
+#toolModal .toolBtn { padding:10px 14px; border-radius:8px; border:none; cursor:pointer; background:linear-gradient(90deg,#ff3af3,#8a2be2); color:#001018; }
+#toolModal #toolResult pre { white-space:pre-wrap; word-break:break-word; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px; }
+
+
+
+
+
+.loadingAnim {
+  color: #bbb;
+  font-size: 14px;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+.toolBox {
+  background: #111;
+  padding: 15px;
+  border-radius: 12px;
+  border: 1px solid #333;
+  max-height: 350px;
+  overflow: auto;
+  margin-top: 15px;
+}
+
+
+.copy-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: #e5e7eb;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.copy-btn:hover {
+  background: #d1d5db;
+}
+pre { position: relative; }
+
+
+
+
+
+
+#imageModalBackdrop:not(.active),
+#toolModalOverlay:not(.active),
+#logoutOverlay:not(.active) {
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+
+
+
+
+
+
+
+
+.loadingAnim {
+  color: #bbb;
+  font-size: 15px;
+  animation: pulse 1.3s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}
+
+
+
+
+#uploadedImagePreview {
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+#uploadedImagePreview.active {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+
+
+
+
+.typing-cursor::after {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 18px;
+  background: #333;
+  margin-left: 4px;
+  animation: blink .8s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1 }
+  50% { opacity: 0 }
+  100% { opacity: 1 }
+}
+
+
+
+
+.msg {
+  animation: msgAppear 0.2s ease-out;
+}
+
+@keyframes msgAppear {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+
+
+</style>
+</head>
+<body>
+
+<!-- LEFT NEON SIDEBAR -->
+<div id="leftSidebar">
+  <div class="sideLogo">AI</div>
+
+  <div class="sideItem" id="newChatSIDEBTN">🆕 <span>New Chat</span></div>
+  <div class="sideItem" id="historyToggle">📜 <span>History</span></div>
+
+<!-- Hidden History Panel -->
+<div id="leftHistoryPanel" style="display:none;">
+    <div id="leftHistory"></div>
 </div>
 
-<div class="chatbox" id="chatbox"></div>
-<input type="text" id="msg" style="width:70%;" placeholder="Type your message..." />
-<button id="sendBtn">Send</button>
+  <div class="sideItem" id="toolsBtn">🧰 <span>Tools</span></div>
 
-<script src="https://js.stripe.com/v3/"></script>
+  <!-- TOOL PANEL (HIDDEN UNTIL TOOLS IS CLICKED) -->
+<div id="toolPanel" style="display:none; padding-left:10px; margin-top:10px;">
+    
+    <div class="toolCategory">Text Tools</div>
+    <button class="toolItem" onclick="openTool('summarizer')">📝 Summarizer</button>
+    <button class="toolItem" onclick="openTool('rewriter')">✍️ Rewriter</button>
+    <button class="toolItem" onclick="openTool('grammar')">📘 Grammar Fix</button>
+    <button class="toolItem" onclick="openTool('expander')">📄 Text Expander</button>
+
+    <div class="toolCategory">Document Tools</div>
+    <button class="toolItem" onclick="openTool('pdf')">📑 PDF Reader</button>
+    <button class="toolItem" onclick="openTool('docx')">📄 DOCX Reader</button>
+    <button class="toolItem" onclick="openTool('extract')">🔎 Extract Text</button>
+
+    <div class="toolCategory">Image Tools</div>
+    <button class="toolItem" onclick="openTool('imggen')">🎨 Generate Image</button>
+    <button class="toolItem" onclick="openTool('enhance')">✨ Enhance Image</button>
+    <button class="toolItem" onclick="openTool('ocr')">📷 OCR</button>
+
+    <div class="toolCategory">Audio Tools</div>
+
+    <button class="toolItem" onclick="openTool('stt')">🎤 Speech to Text</button>
+
+    <div class="toolCategory">Code Tools</div>
+    <button class="toolItem" onclick="openTool('codeExplain')">💡 Explain Code</button>
+    <button class="toolItem" onclick="openTool('apiTester')">⚙ API Tester</button>
+    <div class="toolCategory">Live Image Generation</div>
+    <button class="toolItem" onclick="openLiveImageGen()">
+        🖼️ Ultra-Realistic Live Stream Generator
+    </button>
+
+</div>
+
+  <div class="sideItem">⚙️ <span>Settings</span></div>
+  <div class="sideItem" id="logoutBtn">🚪 <span>Logout</span></div>
+
+
+  <!-- HISTORY BLOCKS -->
+  <div class="leftHistory"></div>
+</div>
+
+
+
+
+
+<!-- Top controls -->
+<div class="top-controls">
+  <button id="darkToggle" class="circle-btn" title="Toggle dark (visual)">🌙</button>
+  <button id="voiceToggle" class="toggle-btn" title="Toggle voice on/off">Voice ON</button>
+</div>
+
+<div class="page">
+<header>
+  <h1>Dashboard</h1>
+  <p>Welcome, {{ current_user.email }}</p>
+</header>
+
+<div class="card">
+  
+
+  </div>
+
+  <!-- EXTRA TEXT-TO-SPEECH BOX -->
+  <div class="panel-card" style="margin-bottom:15px;">
+    <strong>Text to Speech Generator</strong>
+    <p class="small">Type your text, choose a voice, play or download MP3</p>
+
+    <textarea id="ttsInput" style="width:100%; height:80px; margin-top:8px; border-radius:8px; padding:10px; outline:none; border:none; resize:none; color:#e8f7ff; background: rgba(255,255,255,0.02);"></textarea>
+
+    <div style="display:flex; gap:10px; margin-top:10px; align-items:center;">
+        <select id="ttsVoice" class="select" style="flex:1;">
+            <option value="preset_human">Human-like (Premium)</option>
+            <option value="premium_male_1">Male – Deep Warm</option>
+            <option value="premium_male_2">Male – Clear Natural</option>
+            <option value="premium_female_1">Female – Soft Calm</option>
+            <option value="premium_female_2">Female – Bright Energetic</option>
+            <option value="premium_female_3">Female – Studio Narrator</option>
+            <option value="premium_child_1">Child Voice</option>
+            <option value="premium_old_1">Old Man Narrator</option>
+            <option value="premium_robot">Robotic AI Voice</option>
+        </select>
+        <button class="tool" id="playTTSBtn">▶ Play</button>
+        <button class="tool secondary" id="downloadTTSBtn">⬇ Download</button>
+    </div>
+
+    <!-- SPEED / PITCH / VOLUME CONTROLS -->
+    <div style="margin-top:12px;">
+        <label>Speed: <span id="rateVal">1</span></label>
+        <input id="ttsRate" type="range" min="0.5" max="2" step="0.1" value="1">
+
+        <label>Pitch: <span id="pitchVal">1</span></label>
+        <input id="ttsPitch" type="range" min="0" max="2" step="0.1" value="1">
+
+        <label>Volume: <span id="volVal">1</span></label>
+        <input id="ttsVolume" type="range" min="0" max="1" step="0.1" value="1">
+    </div>
+  </div>
+
+  <!-- Voice + language selection -->
+  <div class="row" style="margin-bottom:12px;">
+    <button id="voiceInputBtn" class="tool secondary" onclick="startStt()">🎤 Voice Input</button>
+    <select id="voiceType" class="select"></select>
+    <select id="langSelect" class="select">
+      <option value="auto">Auto (by language)</option>
+      <option value="human_male">Human Male (Premium)</option>
+      <option value="human_female">Human Female (Premium)</option>
+
+      <option value="en">English</option>
+      <option value="hi">Hindi</option>
+      <option value="ta">Tamil</option>
+      <option value="te">Telugu</option>
+      <option value="ml">Malayalam</option>
+      <option value="mr">Marathi</option>
+      <option value="bn">Bengali</option>
+      <option value="ur">Urdu</option>
+      <option value="pa">Punjabi</option>
+      <option value="kn">Kannada</option>
+      <option value="gu">Gujarati</option>
+      <option value="ne">Nepali</option>
+      <option value="si">Sinhala</option>
+      <option value="zh">Chinese</option>
+      <option value="ja">Japanese</option>
+      <option value="ko">Korean</option>
+      <option value="ar">Arabic</option>
+      <option value="es">Spanish</option>
+      <option value="fr">French</option>
+      <option value="de">German</option>
+      <option value="ru">Russian</option>
+      <option value="it">Italian</option>
+      <option value="pt">Portuguese</option>
+    </select>
+  </div>
+
+  <!-- Chat area -->
+  <div class="chat-area">
+    <div class="chat-panel">
+      <div class="messages" id="messages"></div>
+      <div class="input-row">
+	<!-- Updated dashboard with dropdown tool menu under message box -->
+<!-- Full dashboard HTML updated: Top toolbar removed and moved into a dropdown Tools Menu below message box. -->
+
+<!-- BEGIN UPDATED HTML -->
+<div class="tool-dropdown-wrapper" style="margin-top:12px;">
+  <button id="toolMenuBtn" class="tool secondary" style="width:100%; text-align:center; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">⚙️ Tools ▼</button>
+
+  <div id="toolMenu" style="display:none; margin-top:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:10px;">
+
+    <button class="tool" onclick="triggerImageSearch()">🖼️ Search Image</button>
+    <button class="tool" onclick="startStt()">🎙 Voice Input</button>
+    <button class="tool" onclick="openImageModal()">🖼 AI Image</button>
+    <button class="tool" onclick="triggerFileUpload()">📁 Upload File</button>
+    <button class="tool" onclick="doSearch()">🔍 Search</button>
+    <button class="tool" onclick="createPDF()">📄 Generate PDF</button>
+    <button class="tool" onclick="speakLastBotDownload()">🔊 Read Last Reply</button>
+    <button class="tool" onclick="downloadLastBotSpeech()">⬇️ Download Voice</button>
+    
+    <label style="display:block; margin-top:10px; color:var(--muted); font-size:12px;">Model</label>
+    <select id="modelSelector" class="tool secondary" style="width:100%; padding:8px;">
+      <option value="mistralai/mixtral-8x7b-instruct">Mixtral 8×7B</option>
+      <option value="mistralai/mistral-7b-instruct">Mistral 7B</option>
+      <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B</option>
+      <option value="meta-llama/llama-3.1-8b-instruct">Llama 3.1 8B</option>
+      <option value="google/gemma-2-9b-it">Gemma 2 9B</option>
+    </select>
+  </div>
+</div>
+
 <script>
-const publishableKey = "{{ config.get('STRIPE_PUBLISHABLE_KEY') or '' }}";
-const stripe = Stripe("{{ publishable_key }}");
+  const toolBtn = document.getElementById('toolMenuBtn');
+  const toolMenu = document.getElementById('toolMenu');
 
-document.getElementById('checkoutBtn')?.addEventListener('click', async () => {
-  const res = await fetch("/create-checkout-session", { method: "POST" });
-  const data = await res.json();
-  if (data.url) {
-    window.location = data.url;
-  } else {
-    alert("Error creating checkout session");
-  }
-});
-
-document.getElementById('sendBtn').addEventListener('click', async () => {
-  const msg = document.getElementById('msg').value.trim();
-  if (!msg) return;
-  appendMessage('You', msg, 'blue');
-
-  const res = await fetch("/chat", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({message: msg})
+  toolBtn.addEventListener('click', () => {
+    toolMenu.style.display = toolMenu.style.display === 'none' ? 'block' : 'none';
   });
-  const data = await res.json();
-  if (data.response) {
-    appendMessage('Bot', data.response, 'green');
-  } else if (data.error) {
-    appendMessage('Bot', "Error: " + data.error, 'red');
+</script>
+<!-- END UPDATED HTML -->
+
+        <input id="messageInput" class="text-input" placeholder="Type your message..." onkeydown="handleKey(event)" />
+
+        <button class="send-btn" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <aside class="right-panel">
+      <div class="panel-card">
+        <strong>Upload File</strong>
+        <p class="small">Send files to /upload</p>
+        <input id="fileInput" type="file" onchange="uploadFile(this)">
+        <button class="tool secondary" onclick="triggerFileUpload()">Choose file</button>
+      </div>
+      <div class="panel-card">
+        <strong>History</strong>
+        <div id="miniHistory" style="max-height:160px; overflow:auto; margin-top:8px;"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</div>
+
+<!-- AI IMAGE MODAL -->
+<div id="imageModalBackdrop" class="modal-backdrop" onclick="if(event.target===this) closeImageModal()">
+  <div class="modal">
+    <header style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <strong id="modalTitle">AI Image Generator</strong>
+        <div class="small" style="color:var(--muted)">Glass style • Preview & Insert to chat</div>
+      </div>
+      <div><button onclick="closeImageModal()" style="background:none;border:none;color:#fff;font-size:20px;">✕</button></div>
+    </header>
+    <div class="modal-body" style="display:flex;gap:18px;margin-top:12px;">
+      <div class="left" style="flex:1;">
+        <input id="aiPrompt" class="prompt-input" placeholder="Describe the image (required)" />
+        <select id="aiStyle" class="style-select" style="margin-top:8px;">
+          <option value="">No style (default)</option>
+          <option value="realistic">Realistic</option>
+          <option value="anime">Anime</option>
+          <option value="cyberpunk">Cyberpunk</option>
+          <option value="oil painting">Oil Painting</option>
+          <option value="watercolor">Watercolor</option>
+          <option value="pixel art">Pixel Art</option>
+          <option value="fantasy art">Fantasy Art</option>
+          <option value="logo design">Logo Design</option>
+        </select>
+
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <select id="aiSize" class="style-select" style="flex:1;">
+            <option value="256x256">256 x 256 (Small)</option>
+            <option value="512x512">512 x 512 (Medium)</option>
+            <option value="1024x1024">1024 x 1024 (Large)</option>
+            <option value="2048x2048">2048 x 2048 (Ultra)</option>
+          </select>
+          <input id="aiUpload" type="file" accept="image/*" style="display:none" onchange="onAiFileUpload(this)">
+          <button class="tool secondary" onclick="document.getElementById('aiUpload').click()">Upload (optional)</button>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="generateBtn" class="tool" onclick="generateImageFromModal()">Generate</button>
+          <button id="insertBtn" class="tool secondary" onclick="insertPreviewToChat()" disabled>Insert to chat</button>
+          <button id="downloadBtn" class="tool secondary" onclick="downloadPreview()" disabled>Download</button>
+        </div>
+        <div id="modalStatus" class="small" style="margin-top:8px; color:#ffd;"></div>
+      </div>
+
+      <div class="right" style="width:360px;">
+        <div style="width:100%; text-align:center;">
+          <div class="small" style="color:var(--muted)">Preview</div>
+          <img id="aiPreview" class="preview" src="" alt="preview" style="display:none; margin-top:8px;"/>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+
+
+
+// --- STRONG IDENTITY PROTECTION ---
+function sanitizeAIResponse(text) {
+    if (!text) return text;
+
+    // List of banned words (case-insensitive)
+    const banned = [
+        "chatgpt", "gpt", "openai", "anthropic", "claude", "mistral",
+        "llama", "meta", "google", "gemini", "bard", "palm",
+        "ai model", "language model", "large language model"
+    ];
+
+    let clean = text;
+
+    banned.forEach(word => {
+        const regex = new RegExp(word, "gi");
+        clean = clean.replace(regex, "ChatAI");
+    });
+
+    return clean;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===========================
+   GLOBALS + BUG FIXES
+   - preserves your original JS logic verbatim
+=========================== */
+let voiceEnabled = true;
+let uploadedAoImageB64 = null;
+const langNameMap = { en:'English', hi:'Hindi', ta:'Tamil', te:'Telugu', ml:'Malayalam', mr:'Marathi', bn:'Bengali', ur:'Urdu', pa:'Punjabi', kn:'Kannada', gu:'Gujarati', ne:'Nepali', si:'Sinhala', zh:'Chinese', ja:'Japanese', ko:'Korean', ar:'Arabic', es:'Spanish', fr:'French', de:'German', ru:'Russian', it:'Italian', pt:'Portuguese' };
+
+/* ===========================
+   UI toggles
+=========================== */
+document.getElementById('darkToggle').addEventListener('click', () => { document.body.classList.toggle('dark-mode'); });
+const vbtn = document.getElementById('voiceToggle');
+vbtn.addEventListener('click', () => { voiceEnabled = !voiceEnabled; vbtn.textContent = voiceEnabled ? 'Voice ON' : 'Voice OFF'; });
+
+/* ===========================
+   Chat helpers
+=========================== */
+function pushMiniHistory(text, who='You') { const m = document.createElement('div'); m.textContent = `${who}: ${text}`; const container = document.getElementById('miniHistory'); container.prepend(m); }
+function appendMessage(content, sender='bot') { const container = document.getElementById('messages'); const div = document.createElement('div'); div.className = 'msg ' + (sender === 'user' ? 'user' : 'bot'); if(typeof content==='string'){ div.innerHTML=`<div>${content}</div>`; } else if(content instanceof HTMLImageElement){ div.appendChild(content); } else { div.innerHTML='<div>Unsupported content</div>'; } container.appendChild(div); container.scrollTop = container.scrollHeight; }
+function buildBackendMessage(original){ const sel = document.getElementById('langSelect').value; if(!sel||sel==='auto'||sel==='en') return original; const langName = langNameMap[sel] || sel; return `Reply in ${langName}: ${original}`; }
+
+
+// --- STRONG IDENTITY PROTECTION: Catch identity questions ---
+function interceptIdentityQuestions(msg) {
+    const q = msg.toLowerCase();
+
+    if (
+        q.includes("what model") ||
+        q.includes("are you chatgpt") ||
+        q.includes("are you gpt") ||
+        q.includes("who created you") ||
+        q.includes("your name") ||
+        q.includes("are you openai") ||
+        q.includes("who owns you") ||
+        q.includes("who developed you")
+    ) {
+        return "I am Chat AI, an intelligent assistant created by Vishva.";
+    }
+
+    return null;
+}
+
+
+
+
+
+
+
+
+async function sendChat() {
+    // Auto-create conversation if first message
+    if (!_currentConv) {
+        _newConversation("New Chat");
+    }
+
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMessage(text, "user");
+    input.value = "";
+    const identityAnswer = interceptIdentityQuestions(text);
+if (identityAnswer) {
+    appendMessage(identityAnswer, "bot");
+    return;
+}
+    // temp placeholder for bot message
+    const botEl = document.createElement("div");
+    botEl.className = "msg bot";
+    botEl.innerHTML = "<span class='typing'>ChatBot is typing…</span>";
+    document.getElementById("messages").appendChild(botEl);
+
+    const modelSel = document.getElementById("modelSelector").value;
+
+    const response = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, model: modelSel })
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = "";
+
+    botEl.innerHTML = "";
+
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (let l of lines) {
+            if (!l.trim()) continue;
+
+            try {
+                const json = JSON.parse(l);
+                if (json.choices && json.choices[0].delta.content) {
+                    const token = json.choices[0].delta.content;
+                    fullText += token;
+
+                    botEl.innerHTML = marked.parse(fullText);
+                    Prism.highlightAll();
+                }
+		if(voiceEnabled && fullText.trim()) {
+      // get chat voice options and play
+    		  const opts = getChatVoiceOptions();
+     		  speakText(fullText, opts);
+ 	        }
+            } catch {}
+
+        }
+    }
+}
+
+/* ===========================
+   STT
+=========================== */
+let recognition=null;
+if('webkitSpeechRecognition' in window || 'SpeechRecognition' in window){
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition = new SR(); recognition.interimResults=false;
+  recognition.onresult = ev => { const transcript=ev.results[0][0].transcript; document.getElementById('messageInput').value=transcript; appendMessage(transcript,'user'); sendChat(); }
+  recognition.onerror = ev => { console.warn('STT error', ev); };
+}
+function startStt(){ if(!recognition){ alert('Speech recognition not supported'); return; } const sel=document.getElementById('langSelect').value; recognition.lang = sel==='auto'?'en-US':(sel==='hi'?'hi-IN':(sel==='ta'?'ta-IN':'en-US')); recognition.start(); }
+
+/* ===========================
+   TTS: browser speechSynthesis implementation (fixed)
+=========================== */
+let browserVoices = [];
+
+function populateVoices() {
+  browserVoices = speechSynthesis.getVoices() || [];
+
+  // voiceType selector (for chat auto-play)
+  const voiceTypeSel = document.getElementById('voiceType');
+  if (voiceTypeSel) {
+    // preserve current selection
+    const cur = voiceTypeSel.value || 'auto';
+    voiceTypeSel.innerHTML = '';
+    const autoOpt = document.createElement('option'); autoOpt.value = 'auto'; autoOpt.textContent = 'Auto (by language)'; voiceTypeSel.appendChild(autoOpt);
+    // add premium presets as first items (keep same tokens)
+    const p1 = document.createElement('option'); p1.value='human_male'; p1.textContent='Human Male (Preset)'; voiceTypeSel.appendChild(p1);
+    const p2 = document.createElement('option'); p2.value='human_female'; p2.textContent='Human Female (Preset)'; voiceTypeSel.appendChild(p2);
+
+    browserVoices.forEach((v, i) => { const o = document.createElement('option'); o.value = String(i); o.textContent = `${v.name} (${v.lang})`; voiceTypeSel.appendChild(o); });
+    // restore if possible
+    voiceTypeSel.value = cur;
   }
-  document.getElementById('msg').value = "";
+
+  // ttsVoice: keep premium options at top then browser voices
+  const ttsVoiceSel = document.getElementById('ttsVoice');
+  if (ttsVoiceSel) {
+    const curT = ttsVoiceSel.value || 'preset_human';
+    // keep existing preset options (already in DOM), then append browser voices if not already present
+    // remove any previously appended numeric options first
+    Array.from(ttsVoiceSel.querySelectorAll('option')).forEach(opt=>{
+      if (/^\d+$/.test(opt.value)) opt.remove();
+    });
+    browserVoices.forEach((v,i)=>{ const o=document.createElement('option'); o.value=String(i); o.textContent=`${v.name} (${v.lang})`; ttsVoiceSel.appendChild(o); });
+    ttsVoiceSel.value = curT;
+  }
+}
+
+speechSynthesis.onvoiceschanged = populateVoices;
+setTimeout(populateVoices, 600);
+
+function getSelectedVoicePresetValue(selVal) {
+    switch (selVal) {
+        case 'human_male': return { pitch: 0.9, rate: 1.0, volume: 1 };
+        case 'human_female': return { pitch: 1.2, rate: 1.05, volume: 1 };
+        case 'premium_male_1': return { pitch: 0.8, rate: 1.0, volume: 1 };
+        case 'premium_male_2': return { pitch: 1.0, rate: 1.05, volume: 1 };
+        case 'premium_female_1': return { pitch: 1.25, rate: 1.0, volume: 1 };
+        case 'premium_female_2': return { pitch: 1.35, rate: 1.1, volume: 1 };
+        case 'premium_female_3': return { pitch: 1.15, rate: 0.95, volume: 1 };
+        case 'premium_child_1': return { pitch: 1.8, rate: 1.15, volume: 1 };
+        case 'premium_old_1': return { pitch: 0.7, rate: 0.9, volume: 1 };
+        case 'premium_robot': return { pitch: 1.0, rate: 0.85, volume: 1 };
+        case 'preset_human': return { pitch:1.0, rate:1.0, volume:1 };
+        default: return null;
+    }
+}
+
+function speakText(text, options = {}) {
+  if (!text || !text.trim()) return;
+  if (!('speechSynthesis' in window)) { console.warn('Browser TTS not supported'); return; }
+  try { speechSynthesis.cancel(); } catch(e){}
+  const u = new SpeechSynthesisUtterance(text);
+
+  // choose voice by index if provided
+  if (options.voiceIndex !== undefined && options.voiceIndex !== null) {
+    const idx = Number(options.voiceIndex);
+    if (!isNaN(idx) && browserVoices[idx]) u.voice = browserVoices[idx];
+  }
+
+  // if preset provided, apply pitch/rate/volume
+  if (options.preset) { u.rate = options.preset.rate ?? 1; u.pitch = options.preset.pitch ?? 1; u.volume = options.preset.volume ?? 1; }
+  else { u.rate = options.rate ?? 1; u.pitch = options.pitch ?? 1; u.volume = options.volume ?? 1; }
+
+  speechSynthesis.speak(u);
+}
+
+function getChatVoiceOptions() {
+  // Determine what voice/preset to use for automatic bot replies
+  const vt = document.getElementById('voiceType').value;
+  // If vt is a preset token
+  const preset = getSelectedVoicePresetValue(vt);
+  if (preset) return { preset };
+  // if vt is numeric index of browserVoices
+  if (/^\d+$/.test(String(vt))) {
+    return { voiceIndex: vt, rate:1, pitch:1, volume:1 };
+  }
+  // if vt is 'auto', try to pick by language selection
+  const langSel = document.getElementById('langSelect').value;
+  if (langSel && langSel !== 'auto') {
+    // try to match browser voice lang
+    const code = langSel;
+    const found = browserVoices.find(v=>v.lang && v.lang.toLowerCase().startsWith(code));
+    if (found) return { voiceIndex: browserVoices.indexOf(found) };
+  }
+  // fallback: no options -> let browser choose default (avoid forcing female)
+  return {};
+}
+
+function speakLastBotDownload() {
+  const msgs = document.querySelectorAll('.msg.bot'); if (!msgs.length) return alert('No bot messages yet'); const text = (msgs[msgs.length - 1].innerText || '').replace(/^Bot:\s*/i, ''); const vt = document.getElementById('voiceType').value; const preset = getSelectedVoicePresetValue(vt); speakText(text, { voiceIndex: (preset ? null : vt), preset: preset }); }
+
+async function downloadLastBotSpeech() { const msgs = document.querySelectorAll('.msg.bot'); if (!msgs.length) return alert('No bot messages yet'); const text = (msgs[msgs.length - 1].innerText || '').replace(/^Bot:\s*/i, ''); await downloadSpeechViaBackend(text); }
+
+async function downloadSpeechViaBackend(text) { if (!text || !text.trim()) return alert('No text to convert'); const fd = new FormData(); fd.append('text', text); const ttsVoiceSel = document.getElementById('ttsVoice')?.value; const langSel = document.getElementById('langSelect')?.value; if (ttsVoiceSel) fd.append('voice', ttsVoiceSel); if (langSel) fd.append('lang', langSel); try { const res = await fetch('/tts-download', { method: 'POST', body: fd }); if (!res.ok) throw new Error('TTS download failed'); const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'tts_voice.mp3'; a.click(); URL.revokeObjectURL(url); } catch (err) { console.error(err); alert('Failed to download TTS from server. Check /tts-download endpoint.'); } }
+
+/* Separate TTS box handlers */
+function updateTtsControlDisplays() { document.getElementById('rateVal').textContent = document.getElementById('ttsRate').value; document.getElementById('pitchVal').textContent = document.getElementById('ttsPitch').value; document.getElementById('volVal').textContent = document.getElementById('ttsVolume').value; }
+document.getElementById('ttsRate').addEventListener('input', updateTtsControlDisplays);
+document.getElementById('ttsPitch').addEventListener('input', updateTtsControlDisplays);
+document.getElementById('ttsVolume').addEventListener('input', updateTtsControlDisplays);
+updateTtsControlDisplays();
+
+document.getElementById('playTTSBtn').addEventListener('click', () => {
+  const text = document.getElementById('ttsInput').value.trim(); if (!text) return alert('Enter some text!'); const sel = document.getElementById('ttsVoice').value; const preset = getSelectedVoicePresetValue(sel); if (preset) { speakText(text, { preset }); return; } if (/^\d+$/.test(String(sel))) { // browser voice chosen by index
+    speakText(text, { voiceIndex: sel, rate: parseFloat(document.getElementById('ttsRate').value)||1, pitch: parseFloat(document.getElementById('ttsPitch').value)||1, volume: parseFloat(document.getElementById('ttsVolume').value)||1 });
+    return;
+  }
+  // fallback: just speak with defaults
+  speakText(text, { rate: parseFloat(document.getElementById('ttsRate').value)||1, pitch: parseFloat(document.getElementById('ttsPitch').value)||1, volume: parseFloat(document.getElementById('ttsVolume').value)||1 });
 });
 
-function appendMessage(who, text, color='black'){
-  const box = document.getElementById('chatbox');
-  const div = document.createElement('div');
-  div.innerHTML = `<b style="color:${color}">${who}:</b> ${text}`;
-  box.appendChild(div);
-  box.scrollTop = box.scrollHeight;
+document.getElementById('downloadTTSBtn').addEventListener('click', async () => { const text = document.getElementById('ttsInput').value.trim(); if (!text) return alert('Enter some text!'); await downloadSpeechViaBackend(text); });
+
+/* Image search / upload / other tools (kept unchanged) */
+function triggerImageSearch() {
+  document.getElementById('searchImageInput').click();
 }
+
+async function searchImageFile(input) {
+  if (!input.files || input.files.length === 0) {
+    alert('Please select an image.');
+    return;
+  }
+
+  const file = input.files[0];
+  const fd = new FormData();
+  fd.append('image', file);
+
+  appendMessage('Searching image...', 'user');
+
+  try {
+    const res = await fetch('/search-image', {
+      method: 'POST',
+      body: fd
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      appendMessage('Image search error: ' + data.error, 'bot');
+      return;
+    }
+
+    // If server returns a simple result string:
+    if (data.result && !data.analysis) {
+      appendMessage(data.result, 'bot');
+      return;
+    }
+
+    // Build rich message from analysis + results
+    let html = '<div><strong>Image Analysis</strong><br/>';
+    if (data.analysis) {
+      if (data.analysis.width && data.analysis.height) {
+        html += `<div><strong>Size:</strong> ${escapeHtml(data.analysis.width)} x ${escapeHtml(data.analysis.height)}</div>`;
+      }
+      if (data.analysis.mode) {
+        html += `<div><strong>Mode:</strong> ${escapeHtml(data.analysis.mode)}</div>`;
+      }
+      if (data.analysis.text_found) {
+        html += `<div style="margin-top:8px"><strong>Detected Text:</strong><pre style="white-space:pre-wrap">${escapeHtml(data.analysis.text_found)}</pre></div>`;
+      }
+      if (data.analysis.objects && data.analysis.objects.length) {
+        html += `<div style="margin-top:6px"><strong>Objects:</strong> ${escapeHtml(data.analysis.objects.join(', '))}</div>`;
+      }
+    }
+    html += '</div>';
+
+    if (data.results && Array.isArray(data.results) && data.results.length) {
+      html += '<div style="margin-top:8px"><strong>Search Results</strong>';
+      data.results.forEach(r => {
+        const title = r.title || r.url || 'Result';
+        html += `<div style="margin-top:6px"><a href="${escapeHtml(r.url)}" target="_blank" rel="noopener noreferrer"><b>${escapeHtml(title)}</b></a><div style="color:var(--muted)">${escapeHtml(r.snippet||'')}</div></div>`;
+      });
+      html += '</div>';
+    }
+
+    appendMessage(html, 'bot');
+
+  } catch (err) {
+    console.error(err);
+    appendMessage('Server error during image search', 'bot');
+  }
+}
+
+/* alternative lens input handler (if you use a separate lens file input) */
+async function searchByImage() {
+  const el = document.getElementById('lensImage');
+  if (!el) {
+    alert('Lens input not found.');
+    return;
+  }
+  if (!el.files || !el.files[0]) {
+    alert('Please upload an image for lens search.');
+    return;
+  }
+  // Reuse same handler
+  searchImageFile(el);
+}
+
+function triggerFileUpload(){ document.getElementById('fileInput').click(); }
+async function uploadFile(input){ const file=input.files[0]; if(!file) return; const fd=new FormData(); fd.append('file',file); try{ const res=await fetch('/upload',{method:'POST',body:fd}); const data=await res.json(); appendMessage(`Uploaded: ${data.filename||data.message}`,'bot'); }catch(err){ console.error(err); appendMessage('Upload failed','bot'); } }
+
+async function doSearch(){ const q=document.getElementById('messageInput').value.trim(); if(!q) return alert('Enter search query'); try{ const res=await fetch('/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})}); const data=await res.json(); appendMessage(data.result||'No results','bot'); }catch(e){ console.error(e); appendMessage('Search error','bot'); } }
+
+async function createPDF() {
+  // Prefer manual pdf text if provided
+  const manual = document.getElementById('pdfText')?.value.trim();
+  let textToSend = '';
+
+  if (manual) {
+    textToSend = manual;
+  } else {
+    const msgs = Array.from(document.querySelectorAll('.messages .msg'));
+    textToSend = msgs.map(m => {
+      const who = m.classList.contains('user') ? 'You' : 'Bot';
+      // Use innerText for readable content
+      return `${who}: ${m.innerText.trim()}`;
+    }).join('\n\n');
+  }
+
+  if (!textToSend) {
+    alert('No text to generate PDF from. Enter text or chat first.');
+    return;
+  }
+
+  try {
+    const res = await fetch('/generate-pdf', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ text: textToSend })
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      appendMessage('PDF error: ' + data.error, 'bot');
+      return;
+    }
+
+    const url = data.pdf_url || data.url || data.pdf;
+    if (!url) {
+      appendMessage('PDF created but server did not return a download URL.', 'bot');
+      return;
+    }
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = url.split('/').pop().split('?')[0] || 'download.pdf';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    appendMessage('PDF generated and download started.', 'bot');
+
+  } catch (err) {
+    console.error(err);
+    appendMessage('Server error creating PDF', 'bot');
+  }
+}
+
+/* Small utility */
+function escapeHtml(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+
+
+/* AI IMAGE MODAL (kept unchanged) */
+const backdrop=document.getElementById('imageModalBackdrop');
+function openImageModal(){ document.getElementById('aiPrompt').value=''; document.getElementById('aiPreview').style.display='none'; document.getElementById('insertBtn').disabled=true; document.getElementById('downloadBtn').disabled=true; document.getElementById('modalStatus').textContent=''; backdrop.style.display='flex'; }
+function closeImageModal(){ backdrop.style.display='none'; }
+function onAiFileUpload(input){ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ uploadedAoImageB64=e.target.result.split(',')[1]; document.getElementById('modalStatus').textContent='Image attached for image-to-image'; }; reader.readAsDataURL(file); }
+
+async function generateImageFromModal(){ const prompt=document.getElementById('aiPrompt').value.trim(); if(!prompt){ alert('Please enter an image prompt'); return; } const style=document.getElementById('aiStyle').value; const fullPrompt=style?`${prompt}, in ${style} style`:prompt; document.getElementById('modalStatus').textContent='Starting generation...'; document.getElementById('generateBtn').disabled=true; try{ const res=await fetch('/generate-image',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:fullPrompt})}); const data=await res.json(); if(!res.ok||data.error){ alert('Error: '+(data.error||res.statusText)); document.getElementById('modalStatus').textContent='Failed'; document.getElementById('generateBtn').disabled=false; return; } const taskId=data.task_id; document.getElementById('modalStatus').textContent='Generating image...'; let images=[]; while(true){ await new Promise(r=>setTimeout(r,2000)); const statusRes=await fetch(`/generate-image/status/${taskId}`); const statusData=await statusRes.json(); if(statusData.done){ images=statusData.images; break; } } if(!images.length){ alert('No images returned'); document.getElementById('modalStatus').textContent='No image'; document.getElementById('generateBtn').disabled=false; return; } const img=document.getElementById('aiPreview'); img.src=images[0]; img.style.display='block'; img.dataset.url=images[0]; const size=document.getElementById('aiSize').value; const [w,h]=size.split('x').map(Number); const modalWidth=document.querySelector('.modal .right').clientWidth; img.style.maxWidth=Math.min(w,modalWidth)+'px'; img.style.maxHeight='80vh'; document.getElementById('insertBtn').disabled=false; document.getElementById('downloadBtn').disabled=false; document.getElementById('modalStatus').textContent='Image ready'; }catch(err){ console.error(err); document.getElementById('modalStatus').textContent='Error generating image'; } document.getElementById('generateBtn').disabled=false; }
+
+function insertPreviewToChat(){ const img=document.getElementById('aiPreview'); if(!img||!img.dataset.url) return; const imageEl=document.createElement('img'); imageEl.src=img.dataset.url; imageEl.style.maxWidth='320px'; imageEl.style.borderRadius='10px'; appendMessage(imageEl,'bot'); closeImageModal(); }
+
+function downloadPreview(){ const img=document.getElementById('aiPreview'); if(!img||!img.dataset.url) return; const a=document.createElement('a'); a.href=img.dataset.url; a.download='ai_image.png'; a.click(); }
+
+window.addEventListener('load', () => { populateVoices(); });
+
+// new chat button logic (NON-DESTRUCTIVE)
+document.getElementById("newChatSIDEBTN").onclick = () => {
+  const msgBox = document.getElementById("messages");
+  if (msgBox) msgBox.innerHTML = "";  // clear chat
+};
+/* ================================
+   CHAT CONVERSATION HISTORY SYSTEM
+   ================================ */
+const _conversations = {};  // id → conversation object
+let _currentConv = null;    // active conversation ID
+
+// Create new conversation
+function _newConversation(title) {
+    const id = "conv_" + Date.now();
+    _conversations[id] = {
+        id,
+        title: title || "New Chat",
+        created: new Date().toISOString(),
+        updated: new Date().toISOString(),
+        messages: []
+    };
+    _currentConv = id;
+    _renderHistory();
+    return id;
+}
+
+// Save current conversation
+function _saveConversation() {
+    if (!_currentConv) return;
+    const msgs = Array.from(document.querySelectorAll("#messages .msg"));
+
+    const conv = _conversations[_currentConv];
+    conv.messages = msgs.map(m => ({
+        who: m.classList.contains('user') ? "user" : "bot",
+        text: m.innerText.trim()
+    }));
+    conv.title = conv.messages.find(m => m.who === "user")?.text?.slice(0, 40) || conv.title;
+    conv.updated = new Date().toISOString();
+
+    _renderHistory();
+}
+
+// Load existing conversation
+function _loadConversation(id) {
+    if (!_conversations[id]) return;
+
+    _saveConversation();
+    _currentConv = id;
+    const conv = _conversations[id];
+
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+
+    conv.messages.forEach(m => appendMessage(m.text, m.who));
+}
+
+// Render history blocks
+function _renderHistory() {
+    const container = document.getElementById("leftHistory");
+    if (!container) return;
+
+    container.innerHTML = "";
+
+    const list = Object.values(_conversations).sort(
+        (a, b) => new Date(b.updated) - new Date(a.updated)
+    );
+
+    list.forEach(conv => {
+        const div = document.createElement("div");
+        div.className = "histBlock";
+
+        div.innerHTML = `
+            <div class="histTitle">${conv.title}</div>
+            <div class="histTime">${new Date(conv.updated).toLocaleString()}</div>
+
+            <div class="histActions">
+                <button class="histRename" data-id="${conv.id}">✏️ Rename</button>
+                <button class="histDelete" data-id="${conv.id}">🗑 Delete</button>
+            </div>
+        `;
+
+        // Click block = load conversation
+        div.onclick = (e) => {
+            if (
+                e.target.classList.contains("histRename") ||
+                e.target.classList.contains("histDelete")
+            ) return;
+
+            _loadConversation(conv.id);
+        };
+
+        // Delete
+        div.querySelector(".histDelete").onclick = (e) => {
+            e.stopPropagation();
+            delete _conversations[conv.id];
+            container.removeChild(div);
+        };
+
+        // Rename
+        div.querySelector(".histRename").onclick = (e) => {
+            e.stopPropagation();
+            const newName = prompt("Enter new chat name:", conv.title);
+            if (newName) {
+                conv.title = newName;
+                conv.updated = new Date().toISOString();
+                _renderHistory();
+            }
+        };
+
+        container.appendChild(div);
+    });
+}
+
+
+// NEW CHAT BUTTON
+document.getElementById("newChatSIDEBTN").onclick = () => {
+    _saveConversation();
+    _newConversation("New Chat");
+
+    const box = document.getElementById("messages");
+    box.innerHTML = "";
+    appendMessage("New conversation started.", "bot");
+};
+
+
+// Toggle history panel
+let historyOpen = false;
+
+document.getElementById("historyToggle").onclick = () => {
+    historyOpen = !historyOpen;
+
+    const panel = document.getElementById("leftHistoryPanel");
+
+    if (historyOpen) {
+        _renderHistory();        // show latest list
+        panel.style.display = "block";  // open
+    } else {
+        panel.style.display = "none";   // close
+    }
+};
+
+
+
+
+document.getElementById("toolsBtn").onclick = () => {
+    const panel = document.getElementById("toolPanel");
+    panel.style.display = panel.style.display === "none" ? "block" : "none";
+};
+
+
+
+
+// SESSION CHECK EVERY 2 MINUTES
+setInterval(() => {
+    fetch("/is-logged-in")
+        .then(res => res.json())
+        .then(data => {
+            if (!data.logged_in) {
+                showSessionExpiredShield();
+            }
+        });
+}, 120000);
+
+
+// SHIELD ANIMATION
+function showSessionExpiredShield() {
+    const shield = document.createElement("div");
+    shield.innerHTML = "🛡 Session Expired";
+    shield.style.position = "fixed";
+    shield.style.top = "40%";
+    shield.style.left = "50%";
+    shield.style.transform = "translate(-50%, -50%)";
+    shield.style.fontSize = "40px";
+    shield.style.color = "white";
+    shield.style.padding = "20px 30px";
+    shield.style.background = "rgba(0,0,0,0.6)";
+    shield.style.borderRadius = "12px";
+    shield.style.animation = "shieldShake 0.6s ease";
+    shield.style.zIndex = "999999";
+
+    document.body.appendChild(shield);
+
+    setTimeout(() => {
+        window.location.href = "/login";
+    }, 1000);
+}
+
+
+document.getElementById("logoutBtn").onclick = () => {
+    if (confirm("Are you sure you want to logout?")) {
+        window.location.href = "/logout";
+    }
+};
+
+
+
+// ---------- Socket.IO client + flux realtime handling ----------
+let socket = null;
+let fluxModalRoom = null; // uses Socket.IO room = sid handled server-side
+
+function initFluxSocketForModal() {
+  // If socket not created, connect
+  if (!socket) {
+    // connect
+    socket = io(); // assumes same origin; if different origin pass URL: io("https://yourserver")
+    socket.on("connect", () => {
+      console.log("socket.io connected", socket.id);
+    });
+
+    socket.on("connected", (d) => { console.log("server connected ack", d); });
+
+    // live preview frames
+    socket.on("flux_preview", (data) => {
+    const panel = document.getElementById('fluxRealtimePanel');
+    const img = document.getElementById('realtimePreviewImg');
+    const status = document.getElementById('realtimeStatus');
+
+    // Show panel on first preview
+    if (panel) panel.style.display = "block";
+
+    if (data && data.b64) {
+        if (img) {
+            img.src = "data:image/png;base64," + data.b64;
+            img.style.display = "block";
+        }
+        if (status) status.textContent = "Live preview updated";
+    }
+});
+    // Unified Replicate realtime image stream handler
+socket.on("replicate_message", (msg) => {
+    try {
+        const img = document.getElementById("realtimePreviewImg");
+        const status = document.getElementById("realtimeStatus");
+
+        const b64 =
+            msg?.image?.base64 ||
+            msg?.image?.b64 ||
+            msg?.output ||
+            null;
+
+        if (b64 && img) {
+            img.src = "data:image/png;base64," + b64;
+            img.style.display = "block";
+        }
+
+        if (status) status.textContent = "Live preview updated";
+    } catch (e) {
+        console.warn("replicate_message error:", e);
+    }
+});
+
+
+
+    // generic events / debug
+    socket.on("flux_event", (d) => {
+      console.log("flux_event:", d);
+      const status = document.getElementById('realtimeStatus');
+      if (status && d && d.payload) status.textContent = "Flux event";
+    });
+
+    socket.on("flux_error", (d) => {
+      console.error("Flux error:", d);
+      const status = document.getElementById('realtimeStatus');
+      if (status) status.textContent = "Flux error: " + (d.error || "unknown");
+    });
+
+    socket.on("flux_generation_started", (d) => {
+      const status = document.getElementById('realtimeStatus');
+      if (status) status.textContent = "Final generation running…";
+    });
+
+    // When provider sends final results, we expect 'flux_event' or a dedicated event
+    // We'll listen to 'flux_event' for objects that contain final images OR implement 'flux_final' server-side
+    socket.on("flux_event", (d) => {
+      // if event payload contains results array with b64 images, render final grid
+      try {
+        const payload = d.payload;
+        if (payload && payload.results && Array.isArray(payload.results)) {
+          renderFinalGrid(payload.results);
+        } else if (payload && payload.type === "final_images" && payload.images) {
+          renderFinalGrid(payload.images);
+        }
+      } catch(e) {
+        console.warn("flux_event parsing failed", e);
+      }
+    });
+
+    // optional: listen to closed
+    socket.on("flux_closed", (d) => {
+      console.log("flux connection closed", d);
+      const status = document.getElementById('realtimeStatus');
+      if (status) status.textContent = "Flux connection closed";
+    });
+  }
+
+  // Start a Flux session bound to this socket (server will open Flux WS)
+  // Send initial prompt + params (server will create Flux WS for this sid)
+  const prompt = document.getElementById('tool_prompt')?.value || "";
+  socket.emit('start_flux_session', {
+    prompt,
+    style: document.getElementById('tool_style')?.value,
+    ratio: document.getElementById('tool_ratio')?.value,
+    negative: document.getElementById('tool_negative')?.value,
+    seed: document.getElementById('tool_seed')?.value,
+  });
+}
+
+function renderFinalGrid(imagesB64Array) {
+  const container = document.getElementById('finalGrid');
+  if (!container) return;
+  let html = '<div style="display:grid; grid-template-columns:repeat(2,1fr); gap:10px;">';
+  imagesB64Array.forEach((b64, i) => {
+    const url = 'data:image/png;base64,' + b64;
+    html += `<div style="text-align:center;"><img src="${url}" style="width:100%; border-radius:8px;"/><div style="margin-top:6px;"><button class="toolRunBtn" onclick="downloadImageBase64('${b64}', ${i})">Download</button></div></div>`;
+  });
+  html += '</div>';
+  container.innerHTML = html;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/* ===== TOOL MODAL SYSTEM ===== */
+
+const toolModalOverlay = document.getElementById("toolModalOverlay");
+const toolModal = document.getElementById("toolModal");
+const toolModalTitle = document.getElementById("toolModalTitle");
+const toolModalSubtitle = document.getElementById("toolModalSubtitle");
+const toolForm = document.getElementById("toolForm");
+const toolResult = document.getElementById("toolResult");
+const toolLoader = document.getElementById("toolLoader");
+const toolModalClose = document.getElementById("toolModalClose");
+const toolModalDownload = document.getElementById("toolModalDownload");
+
+
+
+
+
+
+
+
+
+
+
+
+function openTool(tool) {
+    const modal = document.getElementById("toolModalOverlay");
+    const title = document.getElementById("toolModalTitle");
+    const subtitle = document.getElementById("toolModalSubtitle");
+    const form = document.getElementById("toolForm");
+    const result = document.getElementById("toolResult");
+    const loader = document.getElementById("toolLoader");
+
+    modal.style.display = "flex";
+    modal.classList.add("active");
+    result.innerHTML = "";
+    loader.style.display = "none";
+
+    const toolConfig = {
+        summarizer:       ["Summarizer",       "Summarize long text instantly.", "text"],
+        rewriter:         ["Rewriter",         "Rewrite text in a better way.",  "text"],
+        grammar:          ["Grammar Fix",      "Fix grammar issues instantly.",  "text"],
+        expander:         ["Text Expander",    "Expand short text to long.",     "text"],
+        codeExplain:      ["Explain Code",     "Explain code with comments.",    "text"],
+        codeFix:          ["Fix Code",         "Fix bugs in your code.",         "text"],
+        imggen:           ["Image Generator",  "Generate AI images.",            "text"],
+        stt:              ["Speech to Text",   "Convert voice to text.",         "file"],
+        pdf:              ["PDF Generator",    "Make PDF from text.",            "text"],
+        docx:             ["DOCX Extract",     "Extract text from DOCX.",        "file"],
+        extract:          ["PDF Extract",      "Extract text from PDF.",         "file"],
+        ocr:              ["OCR Reader",       "Extract text from images.",      "file"],
+        enhance:          ["Image Enhance",    "Improve image quality.",         "file"],
+        inpaint: ["Image Inpaint", "Remove / repair parts of image", "file"],
+	faceEnhance:    ["Face Enhancement",  "Enhance faces in low-quality images.",    "file"],
+	bgReplace:      ["Background Replace","Replace background in an image.",         "file"],
+	text3d:         ["Text to 3D Model",  "Generate realistic 3D models from text.", "text"],
+
+    };
+
+    const [t, sub, type] = toolConfig[tool];
+    title.textContent = t;
+    subtitle.textContent = sub;
+
+    if (type === "text") {
+        form.innerHTML = `
+            <textarea id="toolInput" class="toolInput" placeholder="Enter text..."></textarea>
+
+            <div style="margin-top:8px; font-size:12px; color:#888;" id="inputCount">0 characters</div>
+
+            <button onclick="runTool('${tool}')" class="toolRunBtn">Run</button>
+        `;
+
+        const input = document.getElementById("toolInput");
+        const counter = document.getElementById("inputCount");
+
+        input.oninput = () => {
+            counter.textContent = `${input.value.length} characters`;
+        };
+    }
+
+    if (type === "file") {
+        form.innerHTML = `
+            <input type="file" id="toolFile" class="toolFile">
+            <button onclick="runTool('${tool}')" class="toolRunBtn">Upload</button>
+        `;
+    }
+
+    // CUSTOM FORM FOR IMAGE GENERATOR
+    // inside openTool(tool) when tool === 'imggen' — replace your current imggen form
+if (tool === "imggen") {
+  title.textContent = "Realtime Ultra Image Generator";
+  subtitle.textContent = "Live preview updates while typing (Flux WebSocket)";
+
+  form.innerHTML = `
+    <textarea id="tool_prompt" class="toolInput" placeholder="Type your prompt here..."></textarea>
+
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <select id="tool_style" class="toolInput" style="flex:1;">
+          <option value="photorealistic">Photorealistic</option>
+          <option value="cinematic">Cinematic</option>
+          <option value="3d render">3D Render</option>
+          <option value="anime">Anime</option>
+      </select>
+
+      <select id="tool_ratio" class="toolInput" style="width:110px;">
+          <option value="1:1">1:1</option>
+          <option value="16:9">16:9</option>
+          <option value="9:16">9:16</option>
+      </select>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <input id="tool_negative" class="toolInput" placeholder="Negative prompts (optional)" style="flex:1;" />
+      <input id="tool_seed" class="toolInput" placeholder="Seed (optional)" style="width:120px;" />
+    </div>
+
+    <div style="margin-top:12px;">
+      <div style="font-size:12px;color:#ccc">Live Preview</div>
+      <div style="margin-top:8px; background:#000; padding:8px; border-radius:10px;">
+        <img id="realtimePreviewImg" src="" alt="preview" style="width:100%; display:block; max-height:420px; object-fit:contain;" />
+        <div id="realtimeStatus" style="font-size:12px;color:#bbb;margin-top:8px;">Idle</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <button id="finalGenerateBtn" class="toolRunBtn" style="flex:1;">Generate Final</button>
+      <button id="downloadPreviewBtn" class="toolRunBtn" style="flex:1;">Download Preview</button>
+    </div>
+
+    <div style="margin-top:12px;" id="finalGrid"></div>
+  `;
+
+  // small delay so DOM nodes exist
+  setTimeout(() => {
+    const promptEl = document.getElementById('tool_prompt');
+    const finalBtn = document.getElementById('finalGenerateBtn');
+    const downloadBtn = document.getElementById('downloadPreviewBtn');
+
+    // initialize socket session for this modal
+    initFluxSocketForModal();
+
+    // debounced input -> prompt update
+    let debounceTimer = null;
+    promptEl.addEventListener('input', () => {
+      const val = promptEl.value || "";
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        socket.emit('update_prompt', { prompt: val, final: false });
+        document.getElementById('realtimeStatus').textContent = "Sent prompt update";
+      }, 160); // small debounce for typing
+    });
+
+    finalBtn.addEventListener('click', async () => {
+      const prompt = promptEl.value || "";
+      document.getElementById('realtimeStatus').textContent = "Requesting final high-quality images...";
+      socket.emit('generate_final', {
+        prompt,
+        style: document.getElementById('tool_style')?.value,
+        ratio: document.getElementById('tool_ratio')?.value,
+        negative: document.getElementById('tool_negative')?.value,
+        seed: document.getElementById('tool_seed')?.value,
+        count: 4
+      });
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const img = document.getElementById('realtimePreviewImg');
+      if (!img || !img.src) return alert('No preview yet');
+      const a = document.createElement('a'); a.href = img.src; a.download = 'preview.png'; a.click();
+    });
+  }, 50);
+}
+
+	if (tool === "inpaint") {
+    title.textContent = "Inpainting (Remove / Replace Objects)";
+    subtitle.textContent = "Upload an image and mark the area to modify.";
+
+    form.innerHTML = `
+        <input type="file" id="inpaint_img" class="toolFile" accept="image/*">
+
+        <canvas id="inpaint_canvas" style="
+            width:100%; 
+            margin-top:10px; 
+            border-radius:12px;
+            border:1px solid #333;">
+        </canvas>
+
+        <button onclick="runInpaint()" class="toolRunBtn" style="margin-top:12px;">Apply Inpainting</button>
+    `;
+
+    setupInpaintCanvas();
+}
+
+   if (tool === "faceEnhance") {
+    title.textContent = "Face Enhancement";
+    subtitle.textContent = "Improve quality of blurry or low-res faces.";
+
+    form.innerHTML = `
+        <input type="file" id="face_file" class="toolFile" accept="image/*">
+        <button onclick="runFaceEnhance()" class="toolRunBtn" style="margin-top:10px;">Enhance Face</button>
+    `;
+}
+
+    if (tool === "bgReplace") {
+    title.textContent = "Background Replacement";
+    subtitle.textContent = "Replace background with AI.";
+
+    form.innerHTML = `
+        <input type="file" id="bg_file" class="toolFile" accept="image/*">
+
+        <textarea id="bg_prompt" class="toolInput" style="margin-top:10px;"
+                  placeholder="Describe new background (example: cyberpunk city, beach, forest)..."></textarea>
+
+        <button onclick="runBGReplace()" class="toolRunBtn" style="margin-top:12px;">Replace Background</button>
+    `;
+}
+
+   if (tool === "text3d") {
+    title.textContent = "Text → 3D Model";
+    subtitle.textContent = "Generate 3D GLB/OBJ model from text.";
+
+    form.innerHTML = `
+        <textarea id="toolInput" class="toolInput" placeholder="Describe a 3D object (example: futuristic car, dragon statue)..."></textarea>
+
+        <button onclick="runText3D()" class="toolRunBtn" style="margin-top:10px;">Generate 3D</button>
+    `;
+}
+
+
+
+
+}
+
+
+// CORRECT close handler — hides overlay and removes active class
+
+
+// Text tools
+// ADVANCED TEXT TOOL ENGINE
+async function runTextTool(tool) {
+  const text = document.getElementById("tool_input").value.trim();
+  toolLoader.style.display = "block";
+  toolResult.innerHTML = `<div class="loadingAnim">Processing...</div>`;
+
+  if (!text) {
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = "<p style='color:#f55'>Enter some text.</p>";
+    return;
+  }
+
+  try {
+    const res = await fetch(`/tools/${tool}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text })
+    });
+
+    const data = await res.json();
+    toolLoader.style.display = "none";
+
+    if (!data || !data.result) {
+      throw new Error("Empty result");
+    }
+
+    // Format result beautifully
+    toolResult.innerHTML = `
+      <div class="toolBox">
+        <pre>${data.result}</pre>
+      </div>
+    `;
+
+    return;
+  } catch (err) {
+    console.warn("API failed → fallback mode");
+  }
+
+  // ---- FALLBACK LOGIC ----
+  let fallback = "⚠ Error handling text.";
+
+  if (tool === "summarizer") {
+    fallback = text.split(".").slice(0, 2).join(".") + "...";
+  }
+  else if (tool === "rewriter") {
+    fallback = text.replace(/very/gi, "extremely").replace(/good/gi, "excellent");
+  }
+  else if (tool === "grammar") {
+    fallback = text.replace(/\bi\b/g, "I").replace(/\bim\b/g, "I'm");
+  }
+  else if (tool === "expander") {
+    fallback = text + "\n\nThis expands the idea more deeply.";
+  }
+  else if (tool === "codeExplain") {
+    fallback = "This code performs operations logically...";
+  }
+
+  toolLoader.style.display = "none";
+  toolResult.innerHTML = `<pre>${fallback} (fallback mode)</pre>`;
+}
+
+
+
+
+// ADVANCED FILE TOOL ENGINE
+async function runFileTool(tool) {
+  const file = document.getElementById("tool_file").files[0];
+  toolLoader.style.display = "block";
+  toolResult.innerHTML = `<div class="loadingAnim">Uploading...</div>`;
+
+  if (!file) {
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = "<p style='color:#f55'>Please select a file.</p>";
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    const res = await fetch(`/tools/${tool}`, {
+      method: "POST",
+      body: fd
+    });
+
+    const data = await res.json();
+    toolLoader.style.display = "none";
+
+    toolResult.innerHTML = `
+      <div class="toolBox">
+        <pre>${data.result || "No result returned."}</pre>
+      </div>
+    `;
+  } catch (err) {
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = "<p style='color:#f55'>Upload failed. Try again.</p>";
+  }
+}
+
+// ADVANCED IMAGE GENERATION
+let lastGen = {
+    prompt: "",
+    negative: "",
+    ratio: "1:1",
+    style: "realistic",
+    seed: "",
+    images: []
+};
+
+async function runImageGen() {
+    const promptField = document.getElementById("tool_prompt");
+    const loader = document.getElementById("toolLoader");
+    const result = document.getElementById("toolResult");
+
+    if (!promptField) {
+        console.error("tool_prompt not found");
+        return;
+    }
+    if (!loader) {
+        console.error("toolLoader not found");
+        return;
+    }
+    if (!result) {
+        console.error("toolResult not found");
+        return;
+    }
+
+    const prompt = promptField.value;
+
+    loader.style.display = "block";
+    result.innerHTML = "";
+
+    try {
+        const res = await fetch("/tools/imggen", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ prompt })
+        });
+
+        const blob = await res.blob();
+
+        loader.style.display = "none";
+
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(blob);
+        img.style.maxWidth = "100%";
+
+        result.appendChild(img);
+
+    } catch (e) {
+        loader.style.display = "none";
+        result.innerHTML = "Image generation failed!";
+        console.error(e);
+    }
+}
+
+
+let inpaintCtx, inpaintCanvas, inpaintMask;
+
+function setupInpaintCanvas() {
+    inpaintCanvas = document.getElementById("inpaint_canvas");
+    inpaintCtx = inpaintCanvas.getContext("2d");
+
+    const input = document.getElementById("inpaint_img");
+    input.onchange = () => {
+        const file = input.files[0];
+        const img = new Image();
+
+        img.onload = () => {
+            inpaintCanvas.width = img.width;
+            inpaintCanvas.height = img.height;
+            inpaintCtx.drawImage(img, 0, 0);
+        };
+        img.src = URL.createObjectURL(file);
+    };
+
+    let painting = false;
+
+    inpaintCanvas.onmousedown = () => (painting = true);
+    inpaintCanvas.onmouseup = () => (painting = false);
+    inpaintCanvas.onmousemove = (e) => {
+        if (!painting) return;
+        inpaintCtx.fillStyle = "rgba(255,0,0,0.7)";
+        inpaintCtx.beginPath();
+        inpaintCtx.arc(e.offsetX, e.offsetY, 15, 0, Math.PI * 2);
+        inpaintCtx.fill();
+    };
+}
+
+
+async function runInpaint() {
+    toolLoader.style.display = "block";
+
+    const blob = await new Promise((res) => inpaintCanvas.toBlob(res, "image/png"));
+    const fd = new FormData();
+    fd.append("file", blob);
+
+    const res = await fetch("/tools/inpaint", { method: "POST", body: fd });
+    const imgBlob = await res.blob();
+
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = `<img src="${URL.createObjectURL(imgBlob)}" style="width:100%; border-radius:10px;">`;
+}
+
+
+async function runFaceEnhance() {
+    const file = document.getElementById("face_file").files[0];
+    if (!file) return alert("Upload an image");
+
+    toolLoader.style.display = "block";
+
+    const fd = new FormData();
+    fd.append("file", file);
+
+    const res = await fetch("/tools/face_enhance", { method: "POST", body: fd });
+    const blob = await res.blob();
+
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = `<img src="${URL.createObjectURL(blob)}" style="width:100%; border-radius:10px;">`;
+}
+
+
+async function runBGReplace() {
+    const file = document.getElementById("bg_file").files[0];
+    const prompt = document.getElementById("bg_prompt").value;
+
+    if (!file || !prompt) return alert("Upload image + enter background prompt");
+
+    toolLoader.style.display = "block";
+
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("prompt", prompt);
+
+    const res = await fetch("/tools/bg_replace", { method: "POST", body: fd });
+    const blob = await res.blob();
+
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = `<img src="${URL.createObjectURL(blob)}" style="width:100%; border-radius:10px;">`;
+}
+
+
+
+
+
+async function runText3D() {
+    const text = document.getElementById("toolInput").value.trim();
+    if (!text) return alert("Enter a description");
+
+    toolLoader.style.display = "block";
+
+    const res = await fetch("/tools/text3d", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: text })
+    });
+
+    const blob = await res.blob();
+
+    toolLoader.style.display = "none";
+    toolResult.innerHTML = `
+        <a download="model.glb" href="${URL.createObjectURL(blob)}" class="toolRunBtn">
+            Download 3D Model
+        </a>
+    `;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+function renderImageGrid(images) {
+    let html = `
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="toolRunBtn" onclick="runImageGen()">Generate Again</button>
+            <button class="toolRunBtn" onclick="downloadAllImages()">Download All</button>
+        </div>
+
+        <div style="
+            display:grid; 
+            grid-template-columns:1fr 1fr; 
+            gap:12px; 
+            margin-top:20px;
+        ">
+    `;
+
+    images.forEach((b64, i) => {
+        const url = `data:image/png;base64,${b64}`;
+        html += `
+            <div style="position:relative;">
+                <img 
+                    src="${url}"
+                    onclick="previewZoom('${url}')"
+                    style="
+                        width:100%; 
+                        border-radius:10px; 
+                        cursor:pointer; 
+                        transition:0.3s;
+                        box-shadow:0 0 12px #000a;
+                    "
+                >
+                <div style="margin-top:6px; display:flex; gap:6px;">
+                    <button class="toolRunBtn" style="flex:1;" onclick="downloadImage('${url}', ${i})">Download</button>
+                    <button class="toolRunBtn" style="flex:1;" onclick="upscaleSingle(${i})">Upscale</button>
+                </div>
+            </div>
+        `;
+    });
+
+    html += "</div>";
+
+    toolResult.innerHTML = html;
+}
+
+
+
+function downloadImage(url, index) {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `image_${index + 1}.png`;
+    a.click();
+}
+
+async function downloadAllImages() {
+    const zip = new JSZip();
+
+    lastGen.images.forEach((b64, i) => {
+        zip.file(`image_${i+1}.png`, b64, { base64: true });
+    });
+
+    const blob = await zip.generateAsync({ type: "blob" });
+
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "images.zip";
+    a.click();
+}
+
+
+async function upscaleSingle(index) {
+    const b64 = lastGen.images[index];
+    const fd = new FormData();
+    fd.append("file", b64);
+
+    const res = await fetch("/tools/upscale", { method: "POST", body: fd });
+    const blob = await res.blob();
+
+    const url = URL.createObjectURL(blob);
+    downloadImage(url, index);
+}
+
+
+
+function previewZoom(url) {
+    const w = window.open("");
+    w.document.write(`<img src="${url}" style="width:100%; border-radius:10px;">`);
+}
+
+
+
+
+
+
+
+
+
+
+
+document.addEventListener("mouseover", function (e) {
+  if (e.target.tagName === "PRE") {
+    if (!e.target.querySelector(".copy-btn")) {
+      const btn = document.createElement("button");
+      btn.textContent = "Copy";
+      btn.className = "copy-btn";
+      btn.onclick = function () {
+        navigator.clipboard.writeText(e.target.innerText);
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = "Copy", 1200);
+      };
+      e.target.appendChild(btn);
+    }
+  }
+});
+
+
+
+
+
+
+
+
+
+function handleKey(e) {
+    // Enter to Send
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+    }
+
+    // Ctrl + N → New Chat
+    if (e.ctrlKey && e.key === "n") {
+        e.preventDefault();
+        if (typeof _newConversation === "function") {
+            _newConversation("New Chat");
+            document.getElementById("messages").innerHTML = "";
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
-{% endblock %}
+
+
+
+
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs/prism.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism.css" />
+
+
+<!-- add this just before your main dashboard script runs -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+
+
+
+
+<!-- LOGOUT ANIMATED MODAL -->
+<div id="logoutOverlay" style="
+  position: fixed;
+  inset: 0;
+  backdrop-filter: blur(6px);
+  background: rgba(0,0,0,0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 999999;
+">
+  <div id="logoutModal" style="
+    background: rgba(20,20,35,0.9);
+    padding: 30px;
+    width: 360px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 0 25px #8a2be2aa;
+    text-align: center;
+    animation: popIn 0.35s ease;
+  ">
+    <div style="font-size: 60px; margin-bottom: 15px; animation: lockPulse 1.4s infinite ease-in-out;">
+      🔒
+    </div>
+
+    <h3 style="margin:0; color:#fff;">Confirm Logout</h3>
+    <p style="color:#ddd; margin-top:8px;">Are you sure you want to sign out?</p>
+
+    <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+      <button id="logoutCancel" style="
+        padding:10px 18px;
+        border-radius:8px;
+        border:none;
+        background:#444;
+        color:white;
+        cursor:pointer;
+      ">Cancel</button>
+
+      <button id="logoutConfirm" style="
+        padding:10px 18px;
+        border-radius:8px;
+        border:none;
+        background: linear-gradient(90deg,#ff3af3,#8a2be2);
+        color:white;
+        cursor:pointer;
+      ">Logout</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- UNIVERSAL TOOL MODAL -->
+<!-- ================================
+     TOOL POPUP MODAL (FIXED)
+================================ -->
+<!-- FIXED – ONLY ONE TOOL MODAL -->
+<div id="toolModalOverlay" 
+     style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.65); backdrop-filter:blur(4px);
+            justify-content:center; align-items:center; z-index:99999;">
+
+    <div id="toolModal" 
+         style="width:480px; background:#141414; padding:20px; border-radius:14px;
+                box-shadow:0 0 40px #000; border:1px solid #333; position:relative;">
+
+        <button id="toolModalClose" 
+                style="position:absolute; top:10px; right:12px; 
+                       background:none; color:white; border:none; 
+                       font-size:20px; cursor:pointer;">✖</button>
+
+        <h2 id="toolModalTitle" style="color:white; margin:0; margin-bottom:5px;">Tool</h2>
+        <p id="toolModalSubtitle" style="color:#bbb; margin-top:0; margin-bottom:15px;">
+            Tool description
+        </p>
+
+        <div id="toolForm"></div>
+
+        <div id="toolLoader" style="display:none; margin-top:20px; 
+             text-align:center; color:#aaa;">Processing…</div>
+
+        <div id="toolResult" 
+             style="margin-top:20px; white-space:pre-wrap; color:white;"></div>
+    </div>
+</div>
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const overlay = document.getElementById("toolModalOverlay");
+    const closeBtn = document.getElementById("toolModalClose");
+    const toolForm = document.getElementById("toolForm");
+    const toolResult = document.getElementById("toolResult");
+    const toolLoader = document.getElementById("toolLoader");
+
+    // Close button
+    closeBtn.onclick = () => {
+        overlay.style.display = "none";
+        overlay.classList.remove("active");
+        toolForm.innerHTML = "";
+        toolResult.innerHTML = "";
+        toolLoader.style.display = "none";
+    };
+
+    // Click outside modal to close
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            overlay.style.display = "none";
+            overlay.classList.remove("active");
+            toolForm.innerHTML = "";
+            toolResult.innerHTML = "";
+            toolLoader.style.display = "none";
+        }
+    };
+
+});
+</script>
+
+
+
+
+
+
+
+
+
+<!-- FLUX LIVE IMAGE PREVIEW PANEL -->
+<div id="fluxRealtimePanel" style="
+    position:fixed; 
+    bottom:20px; 
+    right:20px; 
+    width:320px; 
+    background:rgba(0,0,0,0.65); 
+    padding:12px; 
+    border-radius:12px; 
+    backdrop-filter:blur(10px); 
+    color:white; 
+    z-index:999999;
+    display:none;">
+    
+    <div style="font-weight:700; margin-bottom:6px;">⚡ Live Preview</div>
+    <div id="realtimeStatus" style="font-size:12px; opacity:0.8;">Waiting for preview…</div>
+
+    <img id="realtimePreviewImg" 
+         src="" 
+         style="width:100%; margin-top:8px; border-radius:8px; display:none;" />
+
+    <div id="finalGrid" style="margin-top:10px;"></div>
+</div>
+
+
+
+
+
+<div id="liveGenModal" class="modal-backdrop" style="display:none;" onclick="if(event.target===this) closeLiveModal()">
+    <div class="modal">
+        <header style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>Ultra-Realistic Live Image Generator</strong>
+            <button onclick="closeLiveModal()" style="background:none;border:none;color:#fff;font-size:20px;">✕</button>
+        </header>
+
+        <div style="margin-top:12px;">
+            <input id="livePrompt" class="prompt-input" placeholder="Type prompt for real-time generation">
+            <button class="tool" style="margin-top:10px;" onclick="startLiveGen()">Start Live Stream</button>
+
+            <div id="livePreviewBox" style="margin-top:14px; text-align:center;">
+                <img id="livePreviewImg" src="" style="max-width:100%; display:none; border-radius:12px;">
+                <div id="liveGenStatus" style="color:#bbb; margin-top:10px;">Waiting…</div>
+            </div>
+
+            <button class="tool secondary" style="margin-top:15px;" onclick="stopLiveGen()">Stop</button>
+        </div>
+    </div>
+</div>
+
+
+ <script>
+
+    function openLiveImageGen() {
+        document.getElementById("liveGenModal").style.display = "flex";
+    }
+
+    function closeLiveModal() {
+        document.getElementById("liveGenModal").style.display = "none";
+    }
+
+    let socketLive = null;
+
+    function startLiveGen() {
+        const prompt = document.getElementById("livePrompt").value;
+        if (!prompt) return alert("Enter a prompt");
+
+        document.getElementById("liveGenStatus").textContent = "Starting live stream…";
+
+        socketLive = io();
+  	
+        socketLive.emit("start_generation", {
+            model: "black-forest-labs/flux-1.1-pro",
+            input: { prompt: prompt }
+        });
+
+        socketLive.on("replicate_message", (msg) => {
+            if (msg.image && msg.image.base64) {
+                const img = document.getElementById("livePreviewImg");
+                img.src = "data:image/png;base64," + msg.image.base64;
+                img.style.display = "block";
+                document.getElementById("liveGenStatus").textContent = "Streaming…";
+            }
+        });
+	socketLive.on("replicate_error", (err) => {
+  console.error("replicate_error", err);
+  document.getElementById("liveGenStatus").textContent = "Error: " + (err?.error || JSON.stringify(err));
+});
+socketLive.on("replicate_closed", (info) => {
+  document.getElementById("liveGenStatus").textContent = "Connection closed by server";
+});
+socketLive.on("started", d => document.getElementById("liveGenStatus").textContent = "Started");
+
+    }
+
+    function stopLiveGen() {
+        if (socketLive) socketLive.emit("stop_generation");
+        document.getElementById("liveGenStatus").textContent = "Stopped.";
+    }
+
+    </script>
+
+
+
+
+
+
+</body>
+</html>
