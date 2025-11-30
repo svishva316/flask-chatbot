@@ -22,8 +22,7 @@ import PyPDF2
 import docx
 import pytesseract
 import base64
-import torch
-import torchaudio
+
 from websocket import WebSocketApp,create_connection, WebSocketConnectionClosedException  # from websocket-client
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import threading
@@ -789,13 +788,6 @@ def tools_upscale():
 
 
 
-@app.route("/tools/stt", methods=["POST"])
-def tool_stt():
-    file = request.files["file"]
-    waveform, sr = torchaudio.load(file)
-    if waveform.abs().mean() < 0.001:
-        return make("Audio is too quiet to transcribe.")
-    return make("Simple transcription (fallback).")
 
 
 
